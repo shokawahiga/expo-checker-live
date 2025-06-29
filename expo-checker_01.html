@@ -323,7 +323,7 @@
                                     const displayTitle = pavilionNames[pavilionCode] || `(コード: ${pavilionCode})`;
                                     const formattedTime = formatTime(slot.t);
 
-                                    p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}" target="_blank">${displayTitle}：${formattedTime}（残${slot.s}）</a>`;
+                                    p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}">${displayTitle}：${formattedTime}（残${slot.s}）</a>`;
                                     resultDiv.appendChild(p);
                                 }
                             });
