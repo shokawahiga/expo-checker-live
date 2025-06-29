@@ -214,7 +214,7 @@
             "M18S": "未定のパビリオン",
             "M18V": "未定のパビリオン",
             "U099": "未定のパビリオン",
-            "U08C": "未定のパビリオン",
+            "U08C": "未定のパビリion",
             "U089": "未定のパビリオン",
             "M1WA": "未定のパビリオン",
             "M1WM": "未定のパビリオン",
@@ -290,11 +290,7 @@
             resultDiv.innerHTML = "🔄 チェック中..."; // チェック中は常にこのメッセージ
 
             try {
-                // ここはプロキシサーバーを使用する場合のパスです
-                // もし直接APIにアクセスしたいのであれば、
-                // const res = await fetch("https://expo.ebii.net/api/add"); に戻してください。
-                // ただし、CORSエラーが出る可能性が高いです。
-                const res = await fetch("https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec"); 
+                const res = await fetch("https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec");
                 const json = await res.json(); // APIレスポンスを受け取る
 
                 resultDiv.innerHTML = ""; // 結果表示エリアをクリア
@@ -302,35 +298,51 @@
                 let hasAvailable = false;
                 const today = getToday(); // 今日の日付を一度だけ取得
 
-                // APIレスポンスが「パビリオンコードをキーとするオブジェクト」の場合に対応
-                if (typeof json === 'object' && json !== null && !Array.isArray(json)) { 
-                    Object.entries(json).forEach(([pavilionCode, slots]) => {
-                        // slots は [{"t":"HHMM", "s":残数}, ...] の配列
+                // パビリオンと時間帯ごとに、残数の情報を集約するマップ
+                const groupedSlots = {};
 
-                        // 空きスロット（s）がある場合のみ処理
+                // APIレスポンスが「パビリオンコードをキーとするオブジェクト」の場合に対応
+                if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
+                    Object.entries(json).forEach(([pavilionCode, slots]) => {
                         if (Array.isArray(slots) && slots.length > 0) {
                             slots.forEach(slot => {
-                                if (slot.s > 0) { // 残数（s）が0より大きい場合
-                                    hasAvailable = true;
+                                const timeSlot = slot.t;
+                                const remaining = slot.s;
 
-                                    // 予約リンクの構築 (ticketIdとevent_id (c) を使用)
-                                    const linkUrl = `https://ticket.expo2025.or.jp/event_time/?id=${ticketId}&event_id=${pavilionCode}&screen_id=108&lottery=5&keyword=&event_type=0&reserve_id=&entrance_date=${today}`;
-                                    
-                                    const p = document.createElement("p");
-                                    p.className = "entry";
-                                    
-                                    // パビリオン名 (APIからはnが返されないので、pavilionNamesから取得、なければコードを表示)
-                                    const displayTitle = pavilionNames[pavilionCode] || `(コード: ${pavilionCode})`;
-                                    const formattedTime = formatTime(slot.t);
-
-                                    p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}">${displayTitle}：${formattedTime}（残${slot.s}）</a>`;
-                                    resultDiv.appendChild(p);
+                                // 残数1と2は非表示にするため、3以上のみを考慮
+                                if (remaining >= 3) {
+                                    if (!groupedSlots[pavilionCode]) {
+                                        groupedSlots[pavilionCode] = {};
+                                    }
+                                    // 各時間帯の残数を記録
+                                    groupedSlots[pavilionCode][timeSlot] = remaining;
                                 }
                             });
                         }
                     });
+
+                    // フィルタリングされたデータに基づいて表示
+                    Object.entries(groupedSlots).forEach(([pavilionCode, timeSlots]) => {
+                        Object.entries(timeSlots).forEach(([timeSlot, remaining]) => {
+                            hasAvailable = true;
+
+                            // 予約リンクの構築
+                            const linkUrl = `https://ticket.expo2025.or.jp/event_time/?id=${ticketId}&event_id=${pavilionCode}&screen_id=108&lottery=5&keyword=&event_type=0&reserve_id=&entrance_date=${today}`;
+                            
+                            const p = document.createElement("p");
+                            p.className = "entry";
+                            
+                            const displayTitle = pavilionNames[pavilionCode] || `(コード: ${pavilionCode})`;
+                            const formattedTime = formatTime(timeSlot);
+
+                            // target="_blank" を削除し、同じタブで開くように修正
+                            p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}">${displayTitle}：${formattedTime}（残${remaining}）</a>`;
+                            resultDiv.appendChild(p);
+                        });
+                    });
+
                 } else {
-                    // APIレスポンスが期待される形式ではない場合 (例: 直接配列が返ってきた、または全く別の形式)
+                    // APIレスポンスが期待される形式ではない場合
                     resultDiv.innerText = "エラー：APIデータが予期せぬ形式です。コンソールで詳細を確認してください。";
                     console.error("API Response is not in expected object format (top-level is not an object):", json);
                     return; // これ以上処理を進めない
@@ -341,7 +353,7 @@
                 }
             } catch (e) {
                 resultDiv.innerText = "エラー：データの読み込みに失敗しました。詳細をコンソールで確認してください。";
-                console.error("Fetch Error (network or JSON parse error):", e); // エラーの種類をより具体的に
+                console.error("Fetch Error (network or JSON parse error):", e);
             }
         }
 
