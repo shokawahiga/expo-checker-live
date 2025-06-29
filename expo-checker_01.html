@@ -214,7 +214,7 @@
             "M18S": "未定のパビリオン",
             "M18V": "未定のパビリオン",
             "U099": "未定のパビリオン",
-            "U08C": "未定のパビリion",
+            "U08C": "未定のパビリオン",
             "U089": "未定のパビリオン",
             "M1WA": "未定のパビリオン",
             "M1WM": "未定のパビリオン",
@@ -298,46 +298,68 @@
                 let hasAvailable = false;
                 const today = getToday(); // 今日の日付を一度だけ取得
 
-                // パビリオンと時間帯ごとに、残数の情報を集約するマップ
-                const groupedSlots = {};
+                // 各パビリオン・時間帯ごとのs値をすべて記録するためのマップ
+                // 例: { "H7H0": { "1915": [1], "1930": [1], "1945": [2], "2000": [1] } }
+                const slotDetails = {};
 
-                // APIレスポンスが「パビリオンコードをキーとするオブジェクト」の場合に対応
+                // APIレスポンスを処理し、slotDetailsに格納
                 if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
                     Object.entries(json).forEach(([pavilionCode, slots]) => {
                         if (Array.isArray(slots) && slots.length > 0) {
                             slots.forEach(slot => {
                                 const timeSlot = slot.t;
-                                const remaining = slot.s;
+                                const sValue = slot.s;
 
-                                // 残数1と2は非表示にするため、3以上のみを考慮
-                                if (remaining >= 3) {
-                                    if (!groupedSlots[pavilionCode]) {
-                                        groupedSlots[pavilionCode] = {};
-                                    }
-                                    // 各時間帯の残数を記録
-                                    groupedSlots[pavilionCode][timeSlot] = remaining;
+                                if (!slotDetails[pavilionCode]) {
+                                    slotDetails[pavilionCode] = {};
                                 }
+                                if (!slotDetails[pavilionCode][timeSlot]) {
+                                    slotDetails[pavilionCode][timeSlot] = [];
+                                }
+                                slotDetails[pavilionCode][timeSlot].push(sValue);
                             });
                         }
                     });
 
-                    // フィルタリングされたデータに基づいて表示
-                    Object.entries(groupedSlots).forEach(([pavilionCode, timeSlots]) => {
-                        Object.entries(timeSlots).forEach(([timeSlot, remaining]) => {
-                            hasAvailable = true;
+                    // フィルタリングと表示
+                    Object.entries(slotDetails).forEach(([pavilionCode, timeSlots]) => {
+                        Object.entries(timeSlots).forEach(([timeSlot, sValues]) => {
+                            // 条件1: s=1 と s=2 が両方存在するかをチェック
+                            const hasOne = sValues.includes(1);
+                            const hasTwo = sValues.includes(2);
 
-                            // 予約リンクの構築
-                            const linkUrl = `https://ticket.expo2025.or.jp/event_time/?id=${ticketId}&event_id=${pavilionCode}&screen_id=108&lottery=5&keyword=&event_type=0&reserve_id=&entrance_date=${today}`;
+                            // 条件2: s=2 は全部非表示 (これは hasTwo が true の場合に表示しないことを意味する)
+                            // 修正ロジック: s=2は常時非表示 AND s=1とs=2が両方あれば非表示
+                            // したがって、s=2が含まれている場合は、その時間帯は表示しない
+                            if (hasTwo) {
+                                return; // s=2が含まれている場合は表示しない
+                            }
                             
-                            const p = document.createElement("p");
-                            p.className = "entry";
-                            
-                            const displayTitle = pavilionNames[pavilionCode] || `(コード: ${pavilionCode})`;
-                            const formattedTime = formatTime(timeSlot);
+                            // s=2 が含まれておらず、かつ s=1 が含まれていれば表示 (s>=3 はこれまで通り)
+                            if (hasOne || sValues.some(s => s >= 3)) { // s=1 または s>=3 のいずれかがあれば表示
+                                hasAvailable = true;
 
-                            // target="_blank" を削除し、同じタブで開くように修正
-                            p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}">${displayTitle}：${formattedTime}（残${remaining}）</a>`;
-                            resultDiv.appendChild(p);
+                                const linkUrl = `https://ticket.expo2025.or.jp/event_time/?id=${ticketId}&event_id=${pavilionCode}&screen_id=108&lottery=5&keyword=&event_type=0&reserve_id=&entrance_date=${today}`;
+                                
+                                const p = document.createElement("p");
+                                p.className = "entry";
+                                
+                                const displayTitle = pavilionNames[pavilionCode] || `(コード: ${pavilionCode})`;
+                                const formattedTime = formatTime(timeSlot);
+                                
+                                // 表示されるs値は、s=1 または s>=3 の中で最も小さい値（または simply 1 を表示）
+                                // ここでは、`sValues`の中から表示対象となる最小のs値を見つけるか、単に1と表示する
+                                let displayS = 0;
+                                if (hasOne) {
+                                    displayS = 1; // s=1があれば1を表示
+                                } else {
+                                    // s=1がなくてs>=3がある場合、その中の最小値を表示（例: 3, 4, ...）
+                                    displayS = Math.min(...sValues.filter(s => s >= 3));
+                                }
+
+                                p.innerHTML = `<span class="checkbox">✅</span> <a href="${linkUrl}">${displayTitle}：${formattedTime}（空き${displayS}）</a>`;
+                                resultDiv.appendChild(p);
+                            }
                         });
                     });
 
@@ -345,7 +367,7 @@
                     // APIレスポンスが期待される形式ではない場合
                     resultDiv.innerText = "エラー：APIデータが予期せぬ形式です。コンソールで詳細を確認してください。";
                     console.error("API Response is not in expected object format (top-level is not an object):", json);
-                    return; // これ以上処理を進めない
+                    return;
                 }
 
                 if (!hasAvailable) {
