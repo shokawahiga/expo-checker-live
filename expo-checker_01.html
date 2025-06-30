@@ -1,131 +1,142 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>万博 当日予約 空き状況</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        p {
-            text-align: center;
-            color: #666;
-        }
-        #results {
-            list-style: none;
-            padding: 0;
-            min-height: 50px;
-            text-align: center;
-            color: #666;
-        }
-        .entry {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            text-align: left;
-        }
-        .entry:last-child {
-            border-bottom: none;
-        }
-        .entry a {
-            color: green;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        .entry a:hover {
-            text-decoration: underline;
-        }
-        .checkbox {
-            margin-right: 10px;
-            color: green;
-            font-size: 1.2em;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>EXPO 空きチェック</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    label { display: block; margin-top: 1rem; }
+    select, input { margin-top: 0.5rem; padding: 0.5rem; width: 100%; }
+    button { margin-top: 2rem; padding: 1rem; width: 100%; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 1rem; }
+    .result { margin-top: 2rem; color: green; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>万博 当日予約 空き状況</h1>
-        <p>3秒ごとにチェック。空きがあるパビリオンが下に表示されます。</p>
-        <div id="results">
-            🔄 チェック中...
-        </div>
-    </div>
+  <h1>EXPO 空き状況チェッカー</h1>
 
-    <script>
-        const ticketId = "XSMQMPP73F";
+  <label>あなたのID:
+    <input type="text" id="userId" placeholder="例: XXXXXX">
+  </label>
 
-        function getToday() {
-            const d = new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy}${mm}${dd}`;
+  <label>希望開始時間（24h形式）:
+    <input type="number" id="startHour" min="0" max="23">
+  </label>
+
+  <label>希望終了時間（24h形式）:
+    <input type="number" id="endHour" min="1" max="24">
+  </label>
+
+  <label>希望パビリオン 第1希望:
+    <select id="pavilion1"></select>
+  </label>
+  <label>希望パビリオン 第2希望:
+    <select id="pavilion2"></select>
+  </label>
+  <label>希望パビリオン 第3希望:
+    <select id="pavilion3"></select>
+  </label>
+  <label>希望パビリオン 第4希望:
+    <select id="pavilion4"></select>
+  </label>
+  <label>希望パビリオン 第5希望:
+    <select id="pavilion5"></select>
+  </label>
+
+  <button onclick="startChecking()">空きチェック開始</button>
+
+  <div class="result" id="status"></div>
+
+  <script>
+    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec";
+    const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&entrance_date=DATE";
+
+    // 保存データ復元
+    window.onload = () => {
+      loadSavedSettings();
+      fetchPavilionList();
+    };
+
+    // 入力内容を保存
+    function saveSettings() {
+      const settings = {
+        userId: document.getElementById("userId").value,
+        startHour: document.getElementById("startHour").value,
+        endHour: document.getElementById("endHour").value,
+        pavilions: [
+          document.getElementById("pavilion1").value,
+          document.getElementById("pavilion2").value,
+          document.getElementById("pavilion3").value,
+          document.getElementById("pavilion4").value,
+          document.getElementById("pavilion5").value,
+        ]
+      };
+      localStorage.setItem("expoSettings", JSON.stringify(settings));
+    }
+
+    function loadSavedSettings() {
+      const saved = JSON.parse(localStorage.getItem("expoSettings"));
+      if (!saved) return;
+      document.getElementById("userId").value = saved.userId || "";
+      document.getElementById("startHour").value = saved.startHour || "";
+      document.getElementById("endHour").value = saved.endHour || "";
+    }
+
+    async function fetchPavilionList() {
+      try {
+        const res = await fetch(GAS_PROXY_URL);
+        const data = await res.json();
+        const selects = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"];
+        selects.forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = "<option value=''>--選択してください--</option>";
+          data.forEach(p => {
+            if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
+          });
+        });
+        // saved pavilions (after options loaded)
+        const saved = JSON.parse(localStorage.getItem("expoSettings"));
+        if (saved && saved.pavilions) {
+          saved.pavilions.forEach((val, idx) => {
+            if (val) document.getElementById(selects[idx]).value = val;
+          });
         }
+      } catch (e) {
+        document.getElementById("status").textContent = "パビリオン取得失敗";
+      }
+    }
 
-        function formatTime(timeStr) {
-            if (timeStr && timeStr.length === 4) {
-                return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
+    async function startChecking() {
+      saveSettings();
+      document.getElementById("status").textContent = "監視開始...";
+
+      const userId = document.getElementById("userId").value;
+      const startHour = parseInt(document.getElementById("startHour").value);
+      const endHour = parseInt(document.getElementById("endHour").value);
+      const pavilions = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"].map(id => document.getElementById(id).value).filter(Boolean);
+
+      const loop = async () => {
+        try {
+          const res = await fetch(GAS_PROXY_URL);
+          const data = await res.json();
+          for (const item of data) {
+            if (item.s && item.s.length > 0 && pavilions.includes(item.c)) {
+              const hasAvailable = item.s.some(slot => parseInt(slot.t.slice(0, 2)) >= startHour && parseInt(slot.t.slice(0, 2)) < endHour && slot.f === 1);
+              if (hasAvailable) {
+                const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+                const jumpUrl = RESERVE_BASE_URL.replace("USERID", userId).replace("EVENTID", item.c).replace("DATE", today);
+                window.location.href = jumpUrl;
+                return;
+              }
             }
-            return timeStr;
+          }
+        } catch (e) {
+          console.log("Fetch error", e);
         }
+        setTimeout(loop, 1000);
+      };
 
-        async function checkAvailability() {
-            const resultDiv = document.getElementById("results");
-            resultDiv.innerHTML = "🔄 チェック中...";
-
-            try {
-                const res = await fetch("https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec");
-                const json = await res.json();
-
-                resultDiv.innerHTML = "";
-                let hasAvailable = false;
-                const today = getToday();
-
-                for (const item of json) {
-                    const code = item.c;
-                    const name = item.n || `(コード: ${code})`;
-                    const baseUrl = item.u || `https://ticket.expo2025.or.jp/event_time/?id=${ticketId}&event_id=${code}&screen_id=108&lottery=5&event_type=0&entrance_date=${today}`;
-
-                    for (const slot of item.s || []) {
-                        const time = slot.t;
-                        const status = slot.s;
-
-                        if (status >= 2) {
-                            hasAvailable = true;
-                            const p = document.createElement("p");
-                            p.className = "entry";
-                            p.innerHTML = `<span class="checkbox">✅</span> <a href="${baseUrl}" target="_blank">${name}：${formatTime(time)}（空き s=${status}）</a>`;
-                            resultDiv.appendChild(p);
-                        }
-                    }
-                }
-
-                if (!hasAvailable) {
-                    resultDiv.innerText = "❌ 空きは見つかりませんでした";
-                }
-            } catch (e) {
-                resultDiv.innerText = "エラー：データの読み込みに失敗しました。";
-                console.error(e);
-            }
-        }
-
-        checkAvailability();
-        setInterval(checkAvailability, 3000);
-    </script>
+      loop();
+    }
+  </script>
 </body>
 </html>
