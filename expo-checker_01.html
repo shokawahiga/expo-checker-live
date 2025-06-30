@@ -81,21 +81,16 @@
 
     async function fetchPavilionList() {
       try {
-        const res = await fetch(GAS_PROXY_URL);
+        const res = await fetch(GAS_PROXY_URL + "?t=" + new Date().getTime());
         const data = await res.json();
-        const names = {};
-        data.forEach(p => { if (p.n) names[p.c] = p.n });
-
-        const sorted = Object.entries(names).sort((a, b) => a[1].localeCompare(b[1], 'ja'));
         const selects = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"];
         selects.forEach(id => {
           const sel = document.getElementById(id);
           sel.innerHTML = "<option value=''>--選択してください--</option>";
-          sorted.forEach(([code, name]) => {
-            sel.innerHTML += `<option value="${code}">${name}</option>`;
+          data.forEach(p => {
+            if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
           });
         });
-
         const saved = JSON.parse(localStorage.getItem("expoSettings"));
         if (saved && saved.pavilions) {
           saved.pavilions.forEach((val, idx) => {
@@ -118,25 +113,15 @@
 
       const loop = async () => {
         try {
-          const res = await fetch(GAS_PROXY_URL);
+          const res = await fetch(GAS_PROXY_URL + "?t=" + new Date().getTime());
           const data = await res.json();
-          for (const item of data) {
-            const isTargetPavilion = (pavilions.length === 0 || pavilions.includes(item.c));
-            if (item.s && item.s.length > 0 && isTargetPavilion) {
-              const hasAvailable = item.s.some(slot =>
-                (!isNaN(startHour) ? parseInt(slot.t.slice(0, 2)) >= startHour : true) &&
-                (!isNaN(endHour) ? parseInt(slot.t.slice(0, 2)) < endHour : true) &&
-                slot.f === 1
-              );
-              if (hasAvailable) {
-                const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-                const jumpUrl = RESERVE_BASE_URL
-                  .replace("USERID", userId)
-                  .replace("EVENTID", item.c)
-                  .replace("DATE", today);
-                window.location.href = jumpUrl;
-                return;
-              }
+          for (const pref of pavilions) {
+            const item = data.find(d => d.c === pref);
+            if (item && item.s && item.s.some(slot => parseInt(slot.t.slice(0, 2)) >= startHour && parseInt(slot.t.slice(0, 2)) < endHour && slot.s === 1)) {
+              const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+              const jumpUrl = RESERVE_BASE_URL.replace("USERID", userId).replace("EVENTID", item.c).replace("DATE", today);
+              window.location.href = jumpUrl;
+              return;
             }
           }
         } catch (e) {
