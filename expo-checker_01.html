@@ -47,9 +47,10 @@
   <div class="result" id="status"></div>
 
   <script>
-    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec";
+    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbx1juj23u8znVKq8WCyFA9gcCcPX-uhGun6DVz4B2Dd2dvnagMQHj24Pby8dEAkssPu/exec"; // ←ここを差し替える
     const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&entrance_date=DATE";
 
+    // ページ読み込み時に保存情報復元＆パビリオン読み込み
     window.onload = () => {
       loadSavedSettings();
       fetchPavilionList();
@@ -81,8 +82,16 @@
 
     async function fetchPavilionList() {
       try {
-        const res = await fetch(GAS_PROXY_URL + "?t=" + new Date().getTime());
+        const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now()); // キャッシュ回避
         const data = await res.json();
+
+        // 日本語名でソート（未設定名は最後）
+        data.sort((a, b) => {
+          const nameA = a.n || "ZZZ";
+          const nameB = b.n || "ZZZ";
+          return nameA.localeCompare(nameB, "ja");
+        });
+
         const selects = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"];
         selects.forEach(id => {
           const sel = document.getElementById(id);
@@ -91,6 +100,7 @@
             if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
           });
         });
+
         const saved = JSON.parse(localStorage.getItem("expoSettings"));
         if (saved && saved.pavilions) {
           saved.pavilions.forEach((val, idx) => {
@@ -109,25 +119,40 @@
       const userId = document.getElementById("userId").value;
       const startHour = parseInt(document.getElementById("startHour").value);
       const endHour = parseInt(document.getElementById("endHour").value);
-      const pavilions = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"].map(id => document.getElementById(id).value).filter(Boolean);
+      const pavilions = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"]
+        .map(id => document.getElementById(id).value)
+        .filter(Boolean);
 
       const loop = async () => {
         try {
-          const res = await fetch(GAS_PROXY_URL + "?t=" + new Date().getTime());
+          const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now()); // キャッシュ回避
           const data = await res.json();
-          for (const pref of pavilions) {
-            const item = data.find(d => d.c === pref);
-            if (item && item.s && item.s.some(slot => parseInt(slot.t.slice(0, 2)) >= startHour && parseInt(slot.t.slice(0, 2)) < endHour && slot.s === 1)) {
-              const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-              const jumpUrl = RESERVE_BASE_URL.replace("USERID", userId).replace("EVENTID", item.c).replace("DATE", today);
-              window.location.href = jumpUrl;
-              return;
+          const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+          for (const item of data) {
+            if (!item.s || item.s.length === 0) continue;
+
+            // 条件に一致する時間枠が存在するか
+            const hasAvailable = item.s.some(slot => {
+              const hour = parseInt(slot.t.slice(0, 2));
+              return slot.s === 1 && hour >= startHour && hour < endHour;
+            });
+
+            if (hasAvailable) {
+              if (pavilions.length === 0 || pavilions.includes(item.c)) {
+                const jumpUrl = RESERVE_BASE_URL
+                  .replace("USERID", userId)
+                  .replace("EVENTID", item.c)
+                  .replace("DATE", today);
+                window.location.href = jumpUrl;
+                return;
+              }
             }
           }
         } catch (e) {
           console.log("Fetch error", e);
         }
-        setTimeout(loop, 1000);
+        setTimeout(loop, 1000); // 1秒後に再実行
       };
 
       loop();
