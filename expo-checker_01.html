@@ -96,6 +96,38 @@
       label.innerHTML = `希望パビリオン 第${i}希望:<select id="pavilion${i}"></select>`;
       selectsContainer.appendChild(label);
     }
+
+    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec";
+
+    window.onload = () => {
+      fetchPavilionList();
+    };
+
+    async function fetchPavilionList() {
+      try {
+        const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now());
+        const data = await res.json();
+
+        if (!Array.isArray(data)) throw new Error("API response is not array.");
+
+        data.sort((a, b) => (a.n || "").localeCompare(b.n || "", "ja"));
+
+        for (let i = 1; i <= MAX_PAVILIONS; i++) {
+          const sel = document.getElementById(`pavilion${i}`);
+          sel.innerHTML = "<option value=''>--選択してください--</option>";
+          data.forEach(p => {
+            if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
+          });
+        }
+      } catch (e) {
+        console.error("パビリオン取得失敗:", e);
+        document.getElementById("status").textContent = "パビリオン取得失敗: " + e.message;
+      }
+    }
+
+    function startChecking() {
+      document.getElementById("status").textContent = "監視機能は未実装です。";
+    }
   </script>
 </body>
 </html>
