@@ -103,8 +103,35 @@
     const cooldownMap = new Map();
 
     window.onload = () => {
+      loadSettings();
       fetchPavilionList();
     };
+
+    function saveSettings() {
+      const settings = {
+        userId: document.getElementById("userId").value,
+        startHour: document.getElementById("startHour").value,
+        endHour: document.getElementById("endHour").value,
+        pavilions: Array.from({ length: MAX_PAVILIONS }, (_, i) =>
+          document.getElementById(`pavilion${i + 1}`).value
+        ),
+      };
+      localStorage.setItem("expoSettings", JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+      const saved = JSON.parse(localStorage.getItem("expoSettings"));
+      if (!saved) return;
+      document.getElementById("userId").value = saved.userId || "";
+      document.getElementById("startHour").value = saved.startHour || "";
+      document.getElementById("endHour").value = saved.endHour || "";
+      if (Array.isArray(saved.pavilions)) {
+        saved.pavilions.forEach((val, idx) => {
+          const el = document.getElementById(`pavilion${idx + 1}`);
+          if (el && val) el.value = val;
+        });
+      }
+    }
 
     async function fetchPavilionList() {
       try {
@@ -119,6 +146,7 @@
             if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
           });
         }
+        loadSettings();
       } catch (e) {
         console.error("パビリオン取得失敗:", e);
         document.getElementById("status").textContent = "パビリオン取得失敗: " + e.message;
@@ -126,6 +154,7 @@
     }
 
     function startChecking() {
+      saveSettings();
       const userId = document.getElementById("userId").value;
       const startHour = parseInt(document.getElementById("startHour").value);
       const endHour = parseInt(document.getElementById("endHour").value);
@@ -163,7 +192,7 @@
               }
             }
           }
-          document.getElementById("status").textContent = `空きなし。次回チェック: ${new Date().toLocaleTimeString()} (15秒後)`;
+          document.getElementById("status").textContent = `空きなし。次回チェック: ${new Date().toLocaleTimeString()}（※同一枠は15秒クールダウン）`;
         } catch (e) {
           console.error("空きチェック中にエラー:", e);
           document.getElementById("status").textContent = "空きチェックエラー: " + e.message;
