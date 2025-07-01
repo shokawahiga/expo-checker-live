@@ -13,12 +13,14 @@
       margin: 0 auto; /* 中央寄せ */
       background-color: #f4f7f6; /* 背景色を追加 */
       color: #333;
+      line-height: 1.6; /* 行の高さを調整して読みやすく */
     }
 
     h1 {
       text-align: center;
       color: #007bff;
       margin-bottom: 2rem;
+      font-size: 2rem; /* h1のフォントサイズ調整 */
     }
 
     label {
@@ -28,27 +30,31 @@
       color: #555;
     }
 
+    /* 全てのフォーム要素に共通のスタイル */
     select, input[type="text"], input[type="number"] {
       margin-top: 0.6rem; /* ラベルとの間隔 */
       padding: 0.8rem; /* パディングを少し増やしてタップしやすく */
-      width: calc(100% - 16px); /* パディング分を考慮して幅を調整 */
-      box-sizing: border-box; /* paddingとborderをwidthに含める */
+      width: 100%; /* 親要素の幅いっぱいに */
+      box-sizing: border-box; /* paddingとborderをwidthに含める（重要） */
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 1rem;
+      background-color: white; /* 背景色を白に */
       /* iOS Safariのデフォルトスタイルをリセット */
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
     }
 
+    /* セレクトボックスにカスタム矢印を追加 */
     select {
-      background-color: white;
-      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22%2F%3E%3C%2Fsvg%3E'); /* カスタム矢印 */
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22%2F%3E%3C%2Fsvg%3E');
       background-repeat: no-repeat;
-      background-position: right 0.7em top 50%, 0 0;
-      background-size:  0.65em auto, 100% 100%;
+      background-position: right 0.7em center; /* 矢印の位置 */
+      background-size: 0.65em auto; /* 矢印のサイズ */
+      padding-right: 2.5em; /* 矢印とテキストが重ならないように右パディングを追加 */
     }
+    /* IE/Edge向けのセレクトボックス矢印非表示 */
     select::-ms-expand {
       display: none;
     }
@@ -64,6 +70,7 @@
       font-size: 1.1rem;
       cursor: pointer;
       transition: background-color 0.3s ease; /* ホバーエフェクト */
+      -webkit-tap-highlight-color: rgba(0,0,0,0); /* タップ時のハイライトを無効化 */
     }
 
     button:hover {
@@ -120,8 +127,8 @@
 
   <script>
     // !!! 注意: このURLはあなたのデプロイしたGASの「ウェブアプリのURL」に置き換えてください !!!
-    // 通常は /exec で終わる形式です。例: https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec
-    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec"; 
+    // スクリーンショット image_abe8a4.png から判断すると以下のURLです。
+    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbx1juj23u8znVKQ8WCYFa9gcCcPX-uhGun/exec"; 
     
     const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&entrance_date=DATE";
 
@@ -244,7 +251,6 @@
             }
 
             if (!item.s || item.s.length === 0) {
-              // console.log(`Skipping ${item.n || item.c}: No schedule data.`); // デバッグ用
               continue;
             }
 
