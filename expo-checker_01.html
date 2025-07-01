@@ -2,13 +2,85 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EXPO 空きチェック</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    label { display: block; margin-top: 1rem; }
-    select, input { margin-top: 0.5rem; padding: 0.5rem; width: 100%; }
-    button { margin-top: 2rem; padding: 1rem; width: 100%; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 1rem; }
-    .result { margin-top: 2rem; color: green; font-weight: bold; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      /* 画面中央に配置し、最大幅を設定 */
+      max-width: 600px; /* PCでも横長になりすぎないように最大幅を設定 */
+      margin: 0 auto; /* 中央寄せ */
+      background-color: #f4f7f6; /* 背景色を追加 */
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1.2rem; /* 間隔を少し広めに */
+      font-weight: bold;
+      color: #555;
+    }
+
+    select, input[type="text"], input[type="number"] {
+      margin-top: 0.6rem; /* ラベルとの間隔 */
+      padding: 0.8rem; /* パディングを少し増やしてタップしやすく */
+      width: calc(100% - 16px); /* パディング分を考慮して幅を調整 */
+      box-sizing: border-box; /* paddingとborderをwidthに含める */
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      /* iOS Safariのデフォルトスタイルをリセット */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    select {
+      background-color: white;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22%2F%3E%3C%2Fsvg%3E'); /* カスタム矢印 */
+      background-repeat: no-repeat;
+      background-position: right 0.7em top 50%, 0 0;
+      background-size:  0.65em auto, 100% 100%;
+    }
+    select::-ms-expand {
+      display: none;
+    }
+
+    button {
+      margin-top: 2.5rem; /* ボタン上部の間隔を広げる */
+      padding: 1.2rem; /* ボタンのパディングを増やして押しやすく */
+      width: 100%;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px; /* 角を丸く */
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* ホバーエフェクト */
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 2.5rem; /* 結果表示上部の間隔を広げる */
+      padding: 1rem;
+      background-color: #e9f7ef; /* 薄い緑の背景 */
+      border: 1px solid #3c763d;
+      border-radius: 5px;
+      color: #3c763d; /* 濃い緑の文字 */
+      font-weight: bold;
+      text-align: center;
+      word-break: break-all; /* 長いURLなどで改行されるように */
+    }
   </style>
 </head>
 <body>
@@ -179,7 +251,7 @@
             // 条件に一致する「空き」の時間枠が存在するかをチェック
             const hasAvailable = item.s.some(slot => {
               const hour = parseInt(slot.t.slice(0, 2));
-              // ここを修正: sが 0 (空きあり) または 1 (空き小) の場合を「空き」と判定
+              // sが 0 (空きあり) または 1 (空き小) の場合を「空き」と判定
               return (slot.s === 0 || slot.s === 1) && hour >= startHour && hour < endHour;
             });
 
