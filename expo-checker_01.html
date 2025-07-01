@@ -1,567 +1,194 @@
 <!DOCTYPE html>
-
 <html lang="ja">
-
 <head>
-
-  <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>EXPO 空きチェック</title>
-
-  <style>
-
-    body {
-
-      font-family: sans-serif;
-
-      padding: 1rem;
-
-      /* 画面中央に配置し、最大幅を設定 */
-
-      max-width: 600px; /* PCでも横長になりすぎないように最大幅を設定 */
-
-      margin: 0 auto; /* 中央寄せ */
-
-      background-color: #f4f7f6; /* 背景色を追加 */
-
-      color: #333;
-
-    }
-
-
-
-    h1 {
-
-      text-align: center;
-
-      color: #007bff;
-
-      margin-bottom: 2rem;
-
-    }
-
-
-
-    label {
-
-      display: block;
-
-      margin-top: 1.2rem; /* 間隔を少し広めに */
-
-      font-weight: bold;
-
-      color: #555;
-
-    }
-
-
-
-    select, input[type="text"], input[type="number"] {
-
-      margin-top: 0.6rem; /* ラベルとの間隔 */
-
-      padding: 0.8rem; /* パディングを少し増やしてタップしやすく */
-
-      width: calc(100% - 16px); /* パディング分を考慮して幅を調整 */
-
-      box-sizing: border-box; /* paddingとborderをwidthに含める */
-
-      border: 1px solid #ccc;
-
-      border-radius: 4px;
-
-      font-size: 1rem;
-
-      /* iOS Safariのデフォルトスタイルをリセット */
-
-      -webkit-appearance: none;
-
-      -moz-appearance: none;
-
-      appearance: none;
-
-    }
-
-
-
-    select {
-
-      background-color: white;
-
-      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22%2F%3E%3C%2Fsvg%3E'); /* カスタム矢印 */
-
-      background-repeat: no-repeat;
-
-      background-position: right 0.7em top 50%, 0 0;
-
-      background-size:  0.65em auto, 100% 100%;
-
-    }
-
-    select::-ms-expand {
-
-      display: none;
-
-    }
-
-
-
-    button {
-
-      margin-top: 2.5rem; /* ボタン上部の間隔を広げる */
-
-      padding: 1.2rem; /* ボタンのパディングを増やして押しやすく */
-
-      width: 100%;
-
-      background: #007bff;
-
-      color: white;
-
-      border: none;
-
-      border-radius: 8px; /* 角を丸く */
-
-      font-size: 1.1rem;
-
-      cursor: pointer;
-
-      transition: background-color 0.3s ease; /* ホバーエフェクト */
-
-    }
-
-
-
-    button:hover {
-
-      background-color: #0056b3;
-
-    }
-
-
-
-    .result {
-
-      margin-top: 2.5rem; /* 結果表示上部の間隔を広げる */
-
-      padding: 1rem;
-
-      background-color: #e9f7ef; /* 薄い緑の背景 */
-
-      border: 1px solid #3c763d;
-
-      border-radius: 5px;
-
-      color: #3c763d; /* 濃い緑の文字 */
-
-      font-weight: bold;
-
-      text-align: center;
-
-      word-break: break-all; /* 長いURLなどで改行されるように */
-
-    }
-
-  </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EXPO 空きチェック</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      font-weight: bold;
+      color: #555;
+    }
+    select, input[type="text"], input[type="number"] {
+      margin-top: 0.6rem;
+      padding: 0.8rem;
+      width: calc(100% - 16px);
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    select {
+      background-color: white;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22%2F%3E%3C%2Fsvg%3E');
+      background-repeat: no-repeat;
+      background-position: right 0.7em top 50%, 0 0;
+      background-size: 0.65em auto, 100% 100%;
+    }
+    select::-ms-expand {
+      display: none;
+    }
+    button {
+      margin-top: 2.5rem;
+      padding: 1.2rem;
+      width: 100%;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 2.5rem;
+      padding: 1rem;
+      background-color: #e9f7ef;
+      border: 1px solid #3c763d;
+      border-radius: 5px;
+      color: #3c763d;
+      font-weight: bold;
+      text-align: center;
+      word-break: break-all;
+    }
+  </style>
 </head>
-
 <body>
-
-  <h1>EXPO 空き状況チェッカー</h1>
-
-
-
-  <label>あなたのID:
-
-    <input type="text" id="userId" placeholder="例: XXXXXX">
-
-  </label>
-
-
-
-  <label>希望開始時間（24h形式）:
-
-    <input type="number" id="startHour" min="0" max="23">
-
-  </label>
-
-
-
-  <label>希望終了時間（24h形式）:
-
-    <input type="number" id="endHour" min="1" max="24">
-
-  </label>
-
-
-
-  <label>希望パビリオン 第1希望:
-
-    <select id="pavilion1"></select>
-
-  </label>
-
-  <label>希望パビリオン 第2希望:
-
-    <select id="pavilion2"></select>
-
-  </label>
-
-  <label>希望パビリオン 第3希望:
-
-    <select id="pavilion3"></select>
-
-  </label>
-
-  <label>希望パビリオン 第4希望:
-
-    <select id="pavilion4"></select>
-
-  </label>
-
-  <label>希望パビリオン 第5希望:
-
-    <select id="pavilion5"></select>
-
-  </label>
-
-
-
-  <button onclick="startChecking()">空きチェック開始</button>
-
-
-
-  <div class="result" id="status"></div>
-
-
-
-  <script>
-
-    // !!! 注意: このURLはあなたのデプロイしたGASの「ウェブアプリのURL」に置き換えてください !!!
-
-    // 通常は /exec で終わる形式です。例: https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec
-
-    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec"; 
-
-    
-
-    const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&screen_id=108&lottery=5&entrance_date=DATE";
-
-
-
-    // ページ読み込み時に保存情報復元＆パビリオン読み込み
-
-    window.onload = () => {
-
-      loadSavedSettings();
-
-      fetchPavilionList();
-
-    };
-
-
-
-    function saveSettings() {
-
-      const settings = {
-
-        userId: document.getElementById("userId").value,
-
-        startHour: document.getElementById("startHour").value,
-
-        endHour: document.getElementById("endHour").value,
-
-        pavilions: [
-
-          document.getElementById("pavilion1").value,
-
-          document.getElementById("pavilion2").value,
-
-          document.getElementById("pavilion3").value,
-
-          document.getElementById("pavilion4").value,
-
-          document.getElementById("pavilion5").value,
-
-        ]
-
-      };
-
-      localStorage.setItem("expoSettings", JSON.stringify(settings));
-
-    }
-
-
-
-    function loadSavedSettings() {
-
-      const saved = JSON.parse(localStorage.getItem("expoSettings"));
-
-      if (!saved) return;
-
-      document.getElementById("userId").value = saved.userId || "";
-
-      document.getElementById("startHour").value = saved.startHour || "";
-
-      document.getElementById("endHour").value = saved.endHour || "";
-
-    }
-
-
-
-    async function fetchPavilionList() {
-
-      try {
-
-        const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now()); // キャッシュ回避
-
-        if (!res.ok) { // HTTPエラーレスポンス (404, 500など) のチェック
-
-          throw new Error(`HTTP error! status: ${res.status}`);
-
-        }
-
-        const data = await res.json();
-
-
-
-        // JSONデータが配列であることを確認
-
-        if (!Array.isArray(data)) {
-
-          throw new Error("API response is not an array.");
-
-        }
-
-
-
-        // 日本語名でソート（未設定名は最後）
-
-        data.sort((a, b) => {
-
-          const nameA = a.n || "ZZZ"; // 名前がない場合はソートで最後に回すため "ZZZ"
-
-          const nameB = b.n || "ZZZ";
-
-          return nameA.localeCompare(nameB, "ja");
-
-        });
-
-
-
-        const selects = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"];
-
-        selects.forEach(id => {
-
-          const sel = document.getElementById(id);
-
-          sel.innerHTML = "<option value=''>--選択してください--</option>"; // 初期オプション
-
-          data.forEach(p => {
-
-            if (p.n) { // パビリオン名がある場合のみオプションを追加
-
-              sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
-
-            }
-
-          });
-
-        });
-
-
-
-        // 保存された選択肢を復元
-
-        const saved = JSON.parse(localStorage.getItem("expoSettings"));
-
-        if (saved && saved.pavilions) {
-
-          saved.pavilions.forEach((val, idx) => {
-
-            const element = document.getElementById(selects[idx]);
-
-            if (element && val) {
-
-              element.value = val;
-
-            }
-
-          });
-
-        }
-
-      } catch (e) {
-
-        console.error("パビリオン取得失敗:", e); // エラー詳細をコンソールに出力
-
-        document.getElementById("status").textContent = "パビリオン取得失敗: " + e.message;
-
-      }
-
-    }
-
-
-
-    async function startChecking() {
-
-      saveSettings(); // 設定を保存
-
-      document.getElementById("status").textContent = "監視開始...";
-
-
-
-      const userId = document.getElementById("userId").value;
-
-      const startHour = parseInt(document.getElementById("startHour").value);
-
-      const endHour = parseInt(document.getElementById("endHour").value);
-
-      const pavilions = ["pavilion1", "pavilion2", "pavilion3", "pavilion4", "pavilion5"]
-
-        .map(id => document.getElementById(id).value)
-
-        .filter(Boolean); // 空の選択肢を除外
-
-
-
-      // 必須入力チェック
-
-      if (!userId || isNaN(startHour) || isNaN(endHour)) {
-
-        document.getElementById("status").textContent = "エラー: ユーザーID、開始時間、終了時間は必須です。";
-
-        return; // 入力不足の場合は処理を中断
-
-      }
-
-      if (startHour >= endHour) {
-
-        document.getElementById("status").textContent = "エラー: 開始時間は終了時間より前である必要があります。";
-
-        return; // 時間設定が不正な場合は処理を中断
-
-      }
-
-
-
-      const loop = async () => {
-
-        try {
-
-          const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now()); // キャッシュ回避
-
-          if (!res.ok) {
-
-            throw new Error(`HTTP error! status: ${res.status}`);
-
-          }
-
-          const data = await res.json();
-
-
-
-          if (!Array.isArray(data)) {
-
-            throw new Error("API response is not an array in checking loop.");
-
-          }
-
-
-
-          const today = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // "YYYYMMDD"形式
-
-
-
-          for (const item of data) {
-
-            // ユーザーが特定のパビリオンを選択している場合、それに含まれないものはスキップ
-
-            if (pavilions.length > 0 && !pavilions.includes(item.c)) {
-
-              continue;
-
-            }
-
-
-
-            if (!item.s || item.s.length === 0) {
-
-              // console.log(`Skipping ${item.n || item.c}: No schedule data.`); // デバッグ用
-
-              continue;
-
-            }
-
-
-
-            // 条件に一致する「空き」の時間枠が存在するかをチェック
-
-            const hasAvailable = item.s.some(slot => {
-
-              const hour = parseInt(slot.t.slice(0, 2));
-
-              // sが 0 (空きあり) または 1 (空き小) の場合を「空き」と判定
-
-              return (slot.s === 0 || slot.s === 1) && hour >= startHour && hour < endHour;
-
-            });
-
-
-
-            if (hasAvailable) {
-
-              console.log(`空きを発見！パビリオン: ${item.n || item.c}`); // デバッグ用
-
-              const jumpUrl = RESERVE_BASE_URL
-
-                .replace("USERID", userId)
-
-                .replace("EVENTID", item.c)
-
-                .replace("DATE", today);
-
-              
-
-              document.getElementById("status").textContent = `空き発見！${item.n || item.c} に移動中...`;
-
-              window.location.href = jumpUrl; // 発見したらすぐにリダイレクト
-
-              return; // ループと監視を終了
-
-            }
-
-          }
-
-
-
-          // 空きが見つからなかった場合
-
-          document.getElementById("status").textContent = `空きなし。次回チェック: ${new Date().toLocaleTimeString()} (1秒後)`;
-
-        } catch (e) {
-
-          console.error("空きチェック中にエラー:", e); // エラー詳細をコンソールに出力
-
-          document.getElementById("status").textContent = "空きチェックエラー: " + e.message;
-
-        }
-
-        setTimeout(loop, 1000); // 1秒後に再実行
-
-      };
-
-
-
-      loop(); // 初回実行
-
-    }
-
-  </script>
-
+  <h1>EXPO 空き状況チェッカー</h1>
+  <label>あなたのID:
+    <input type="text" id="userId" placeholder="例: XXXXXX">
+  </label>
+  <label>希望開始時間（24h形式）:
+    <input type="number" id="startHour" min="0" max="23">
+  </label>
+  <label>希望終了時間（24h形式）:
+    <input type="number" id="endHour" min="1" max="24">
+  </label>
+  ${[...Array(10).keys()].map(i => `
+  <label>希望パビリオン 第${i + 1}希望:
+    <select id="pavilion${i + 1}"></select>
+  </label>
+  `).join('')}
+  <button onclick="startChecking()">空きチェック開始</button>
+  <div class="result" id="status"></div>
+  <script>
+    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec";
+    const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&screen_id=108&lottery=5&entrance_date=DATE";
+    let jumpedSlots = new Map();
+    const JUMP_INTERVAL = 15000;
+
+    window.onload = () => {
+      loadSavedSettings();
+      fetchPavilionList();
+    };
+
+    function saveSettings() {
+      const settings = {
+        userId: document.getElementById("userId").value,
+        startHour: document.getElementById("startHour").value,
+        endHour: document.getElementById("endHour").value,
+        pavilions: [...Array(10).keys()].map(i => document.getElementById("pavilion" + (i + 1)).value)
+      };
+      localStorage.setItem("expoSettings", JSON.stringify(settings));
+    }
+
+    function loadSavedSettings() {
+      const saved = JSON.parse(localStorage.getItem("expoSettings"));
+      if (!saved) return;
+      document.getElementById("userId").value = saved.userId || "";
+      document.getElementById("startHour").value = saved.startHour || "";
+      document.getElementById("endHour").value = saved.endHour || "";
+    }
+
+    async function fetchPavilionList() {
+      try {
+        const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now());
+        const data = await res.json();
+        data.sort((a, b) => (a.n || "ZZZ").localeCompare(b.n || "ZZZ", "ja"));
+        const selects = [...Array(10).keys()].map(i => "pavilion" + (i + 1));
+        selects.forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = "<option value=''>--選択してください--</option>";
+          data.forEach(p => {
+            if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
+          });
+        });
+        const saved = JSON.parse(localStorage.getItem("expoSettings"));
+        if (saved?.pavilions) saved.pavilions.forEach((val, idx) => {
+          if (val) document.getElementById("pavilion" + (idx + 1)).value = val;
+        });
+      } catch (e) {
+        document.getElementById("status").textContent = "パビリオン取得失敗: " + e.message;
+      }
+    }
+
+    async function startChecking() {
+      saveSettings();
+      document.getElementById("status").textContent = "監視開始...";
+
+      const userId = document.getElementById("userId").value;
+      const startHour = parseInt(document.getElementById("startHour").value);
+      const endHour = parseInt(document.getElementById("endHour").value);
+      const pavilions = [...Array(10).keys()].map(i => document.getElementById("pavilion" + (i + 1)).value).filter(Boolean);
+      if (!userId || isNaN(startHour) || isNaN(endHour) || startHour >= endHour) {
+        document.getElementById("status").textContent = "入力が不完全です。";
+        return;
+      }
+
+      const loop = async () => {
+        try {
+          const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now());
+          const data = await res.json();
+          const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+          const now = Date.now();
+
+          for (const item of data) {
+            if (pavilions.length && !pavilions.includes(item.c)) continue;
+            if (!Array.isArray(item.s)) continue;
+            for (const slot of item.s) {
+              const hour = parseInt(slot.t.slice(0, 2));
+              const slotKey = `${item.c}_${slot.t}`;
+              const lastJump = jumpedSlots.get(slotKey) || 0;
+              if ((slot.s === 0 || slot.s === 1) && hour >= startHour && hour < endHour) {
+                if (now - lastJump < JUMP_INTERVAL) continue;
+                jumpedSlots.set(slotKey, now);
+                const url = RESERVE_BASE_URL.replace("USERID", userId).replace("EVENTID", item.c).replace("DATE", today);
+                document.getElementById("status").textContent = `空き発見！${item.n || item.c} (${slot.t}) に移動中...`;
+                window.location.href = url;
+                return;
+              }
+            }
+          }
+
+          document.getElementById("status").textContent = `空きなし (${new Date().toLocaleTimeString()})`;
+        } catch (e) {
+          document.getElementById("status").textContent = "エラー: " + e.message;
+        }
+        setTimeout(loop, 1000);
+      };
+      loop();
+    }
+  </script>
 </body>
-
 </html>
