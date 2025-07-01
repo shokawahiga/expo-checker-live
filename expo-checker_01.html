@@ -85,109 +85,16 @@
   <label>希望終了時間（24h形式）:
     <input type="number" id="endHour" min="1" max="24">
   </label>
-  ${[...Array(10).keys()].map(i => `
-  <label>希望パビリオン 第${i + 1}希望:
-    <select id="pavilion${i + 1}"></select>
-  </label>
-  `).join('')}
+  <div id="pavilion-selects"></div>
   <button onclick="startChecking()">空きチェック開始</button>
   <div class="result" id="status"></div>
   <script>
-    const GAS_PROXY_URL = "https://script.google.com/macros/s/AKfycbwErYX1zT0OoEapftpaTUKcvULQNAnYjgjJeKK6xJN7f8UipZz_YSc96Q2DHRkDHcVPIw/exec";
-    const RESERVE_BASE_URL = "https://ticket.expo2025.or.jp/event_time/?id=USERID&event_id=EVENTID&screen_id=108&lottery=5&entrance_date=DATE";
-    let jumpedSlots = new Map();
-    const JUMP_INTERVAL = 15000;
-
-    window.onload = () => {
-      loadSavedSettings();
-      fetchPavilionList();
-    };
-
-    function saveSettings() {
-      const settings = {
-        userId: document.getElementById("userId").value,
-        startHour: document.getElementById("startHour").value,
-        endHour: document.getElementById("endHour").value,
-        pavilions: [...Array(10).keys()].map(i => document.getElementById("pavilion" + (i + 1)).value)
-      };
-      localStorage.setItem("expoSettings", JSON.stringify(settings));
-    }
-
-    function loadSavedSettings() {
-      const saved = JSON.parse(localStorage.getItem("expoSettings"));
-      if (!saved) return;
-      document.getElementById("userId").value = saved.userId || "";
-      document.getElementById("startHour").value = saved.startHour || "";
-      document.getElementById("endHour").value = saved.endHour || "";
-    }
-
-    async function fetchPavilionList() {
-      try {
-        const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now());
-        const data = await res.json();
-        data.sort((a, b) => (a.n || "ZZZ").localeCompare(b.n || "ZZZ", "ja"));
-        const selects = [...Array(10).keys()].map(i => "pavilion" + (i + 1));
-        selects.forEach(id => {
-          const sel = document.getElementById(id);
-          sel.innerHTML = "<option value=''>--選択してください--</option>";
-          data.forEach(p => {
-            if (p.n) sel.innerHTML += `<option value="${p.c}">${p.n}</option>`;
-          });
-        });
-        const saved = JSON.parse(localStorage.getItem("expoSettings"));
-        if (saved?.pavilions) saved.pavilions.forEach((val, idx) => {
-          if (val) document.getElementById("pavilion" + (idx + 1)).value = val;
-        });
-      } catch (e) {
-        document.getElementById("status").textContent = "パビリオン取得失敗: " + e.message;
-      }
-    }
-
-    async function startChecking() {
-      saveSettings();
-      document.getElementById("status").textContent = "監視開始...";
-
-      const userId = document.getElementById("userId").value;
-      const startHour = parseInt(document.getElementById("startHour").value);
-      const endHour = parseInt(document.getElementById("endHour").value);
-      const pavilions = [...Array(10).keys()].map(i => document.getElementById("pavilion" + (i + 1)).value).filter(Boolean);
-      if (!userId || isNaN(startHour) || isNaN(endHour) || startHour >= endHour) {
-        document.getElementById("status").textContent = "入力が不完全です。";
-        return;
-      }
-
-      const loop = async () => {
-        try {
-          const res = await fetch(GAS_PROXY_URL + "?t=" + Date.now());
-          const data = await res.json();
-          const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-          const now = Date.now();
-
-          for (const item of data) {
-            if (pavilions.length && !pavilions.includes(item.c)) continue;
-            if (!Array.isArray(item.s)) continue;
-            for (const slot of item.s) {
-              const hour = parseInt(slot.t.slice(0, 2));
-              const slotKey = `${item.c}_${slot.t}`;
-              const lastJump = jumpedSlots.get(slotKey) || 0;
-              if ((slot.s === 0 || slot.s === 1) && hour >= startHour && hour < endHour) {
-                if (now - lastJump < JUMP_INTERVAL) continue;
-                jumpedSlots.set(slotKey, now);
-                const url = RESERVE_BASE_URL.replace("USERID", userId).replace("EVENTID", item.c).replace("DATE", today);
-                document.getElementById("status").textContent = `空き発見！${item.n || item.c} (${slot.t}) に移動中...`;
-                window.location.href = url;
-                return;
-              }
-            }
-          }
-
-          document.getElementById("status").textContent = `空きなし (${new Date().toLocaleTimeString()})`;
-        } catch (e) {
-          document.getElementById("status").textContent = "エラー: " + e.message;
-        }
-        setTimeout(loop, 1000);
-      };
-      loop();
+    const MAX_PAVILIONS = 10;
+    const selectsContainer = document.getElementById("pavilion-selects");
+    for (let i = 1; i <= MAX_PAVILIONS; i++) {
+      const label = document.createElement("label");
+      label.innerHTML = `希望パビリオン 第${i}希望:<select id="pavilion${i}"></select>`;
+      selectsContainer.appendChild(label);
     }
   </script>
 </body>
